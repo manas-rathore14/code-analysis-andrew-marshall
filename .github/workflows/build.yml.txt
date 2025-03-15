@@ -1,4 +1,4 @@
-name: SonarCloud Analysis
+name: SonarCloud Code Analysis
 
 on:
   push:
@@ -14,8 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensures full Git history is available
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -23,16 +25,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v3
+      - name: Cache SonarCloud scanner
+        uses: actions/cache@v4
         with:
-          path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          path: ~/.sonar/cache
+          key: sonar-scanner-cli-7.0.2.4839
+          restore-keys: sonar-scanner-cli-
 
       - name: Run SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn clean verify sonar:sonar \
             -Dsonar.projectKey=manas-rathore14_code-analysis-andrew-marshall \
-            -Dsonar.organizati
+            -Dsonar.organization=manas-rathore14 \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
